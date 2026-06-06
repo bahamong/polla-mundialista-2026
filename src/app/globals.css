@@ -59,3 +59,41 @@
 .pitch-gradient {
   background: linear-gradient(135deg, hsl(152 76% 30%), hsl(222 47% 9%) 70%);
 }
+
+@layer components {
+  /* Elevación + brillo sutil al pasar el cursor sobre tarjetas/recuadros */
+  .hover-lift {
+    @apply transition-all duration-300 ease-out;
+  }
+  .hover-lift:hover {
+    transform: translateY(-3px);
+    border-color: hsl(var(--primary) / 0.5);
+    box-shadow:
+      0 10px 30px -10px hsl(0 0% 0% / 0.5),
+      0 0 18px -6px hsl(var(--primary) / 0.45);
+  }
+
+  /* Realce al pasar el cursor sobre filas de tabla */
+  .row-hover {
+    @apply transition-colors duration-200;
+  }
+  .row-hover:hover {
+    background-color: hsl(var(--primary) / 0.08);
+  }
+
+  /* Botones/recuadros interactivos con micro-presión */
+  .press {
+    @apply transition-transform duration-150 active:scale-[0.97];
+  }
+}
+
+/* Respeta la preferencia de movimiento reducido */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}

@@ -11,7 +11,7 @@ export default async function AppLayout({
   return (
     <div className="min-h-screen">
       <Navbar profile={profile} />
-      <main className="container py-6">{children}</main>
+      <main className="container animate-fade-in py-6">{children}</main>
     </div>
   );
 }

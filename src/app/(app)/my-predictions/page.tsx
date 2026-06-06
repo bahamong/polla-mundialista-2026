@@ -53,7 +53,7 @@ export default async function MyPredictionsPage() {
             const m = p.match;
             const finished = m.status === "finished";
             return (
-              <Card key={p.id}>
+              <Card key={p.id} className="hover-lift">
                 <CardHeader className="flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm text-muted-foreground">
                     {STAGE_LABELS[m.stage]}

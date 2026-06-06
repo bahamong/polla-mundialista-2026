@@ -37,7 +37,7 @@ export function MatchCard({
   const awayName = match.away_team?.name ?? match.away_placeholder ?? "Visitante";
 
   return (
-    <Card className="overflow-hidden">
+    <Card className="hover-lift animate-fade-in overflow-hidden">
       <div className="flex items-center justify-between border-b border-border bg-secondary/30 px-4 py-2 text-xs">
         <div className="flex items-center gap-2">
           <Badge variant="outline">{STAGE_LABELS[match.stage]}</Badge>

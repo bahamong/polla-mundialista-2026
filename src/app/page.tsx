@@ -72,7 +72,7 @@ export default async function LandingPage() {
       {/* HERO */}
       <section className="pitch-gradient border-b border-border">
         <div className="container grid gap-8 py-20 md:grid-cols-2 md:items-center">
-          <div className="space-y-6">
+          <div className="animate-fade-up space-y-6">
             <span className="inline-flex items-center gap-2 rounded-full border border-primary/40 bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
               <Trophy className="h-3 w-3" /> FIFA World Cup 2026
             </span>
@@ -107,7 +107,7 @@ export default async function LandingPage() {
 
           {/* Ranking público */}
           {publicLb && (
-            <Card className="md:ml-auto md:w-full md:max-w-md">
+            <Card className="hover-lift animate-scale-in md:ml-auto md:w-full md:max-w-md">
               <CardContent className="p-6">
                 <h3 className="mb-4 flex items-center gap-2 font-semibold">
                   <BarChart3 className="h-5 w-5 text-primary" /> Top 5
@@ -150,9 +150,9 @@ export default async function LandingPage() {
         </h2>
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
           {features.map((f) => (
-            <Card key={f.title}>
+            <Card key={f.title} className="hover-lift group">
               <CardContent className="space-y-3 p-6">
-                <f.icon className="h-8 w-8 text-primary" />
+                <f.icon className="h-8 w-8 text-primary transition-transform duration-300 group-hover:scale-110" />
                 <h3 className="font-semibold">{f.title}</h3>
                 <p className="text-sm text-muted-foreground">{f.desc}</p>
               </CardContent>
@@ -202,7 +202,7 @@ export default async function LandingPage() {
 
       <footer className="border-t border-border">
         <div className="container py-8 text-center text-sm text-muted-foreground">
-          {name} · Hecho con Next.js + Supabase
+          {name} · Hecho por Luis Miguel Bahamón González
         </div>
       </footer>
     </div>

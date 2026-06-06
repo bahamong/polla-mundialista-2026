@@ -51,7 +51,7 @@ export default async function AdminOverviewPage() {
     <div className="space-y-6">
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {stats.map((s, i) => (
-          <Card key={i}>
+          <Card key={i} className="hover-lift">
             <CardContent className="flex items-center gap-3 p-4">
               <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-secondary">
                 <s.icon className="h-5 w-5 text-accent" />
