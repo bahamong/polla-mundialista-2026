@@ -1,0 +1,61 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Tema oscuro deportivo inspirado en el Mundial 2026 */
+    --background: 222 47% 7%;
+    --foreground: 210 40% 98%;
+
+    --card: 222 40% 11%;
+    --card-foreground: 210 40% 98%;
+
+    --primary: 152 76% 42%;
+    --primary-foreground: 222 47% 7%;
+
+    --secondary: 217 33% 17%;
+    --secondary-foreground: 210 40% 98%;
+
+    --muted: 217 33% 17%;
+    --muted-foreground: 215 20% 65%;
+
+    --accent: 280 70% 55%;
+    --accent-foreground: 210 40% 98%;
+
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 217 33% 20%;
+    --input: 217 33% 22%;
+    --ring: 152 76% 42%;
+
+    --radius: 0.75rem;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    background-image:
+      radial-gradient(
+        circle at 15% 10%,
+        hsl(152 76% 42% / 0.08),
+        transparent 40%
+      ),
+      radial-gradient(
+        circle at 85% 0%,
+        hsl(280 70% 55% / 0.08),
+        transparent 35%
+      );
+    background-attachment: fixed;
+    min-height: 100vh;
+  }
+}
+
+.pitch-gradient {
+  background: linear-gradient(135deg, hsl(152 76% 30%), hsl(222 47% 9%) 70%);
+}
