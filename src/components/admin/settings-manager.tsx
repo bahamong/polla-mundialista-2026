@@ -16,6 +16,14 @@ const FIELDS: {
 }[] = [
   { key: "tournament_name", label: "Nombre del torneo" },
   { key: "entry_fee", label: "Costo del cupo", type: "number" },
+  {
+    key: "platform_fee",
+    label: "Comisión de la página por cupo (se resta del premio)",
+    type: "number",
+  },
+  { key: "prize_pct_1", label: "Premio 1° lugar (%)", type: "number" },
+  { key: "prize_pct_2", label: "Premio 2° lugar (%)", type: "number" },
+  { key: "prize_pct_3", label: "Premio 3° lugar (%)", type: "number" },
   { key: "currency", label: "Moneda (ej. COP, USD)" },
   { key: "points_per_correct", label: "Puntos por acierto", type: "number" },
   { key: "registration_open", label: "Registro abierto", type: "boolean" },

@@ -1,10 +1,5 @@
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
-import {
-  REMEMBER_COOKIE,
-  REMEMBER_MAX_AGE,
-  wantsPersistent,
-} from "@/lib/auth-cookies";
 
 type CookieToSet = { name: string; value: string; options?: CookieOptions };
 
@@ -13,10 +8,6 @@ type CookieToSet = { name: string; value: string; options?: CookieOptions };
  */
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });
-
-  const persistent = wantsPersistent(
-    request.cookies.get(REMEMBER_COOKIE)?.value,
-  );
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -31,15 +22,9 @@ export async function updateSession(request: NextRequest) {
             request.cookies.set(name, value),
           );
           supabaseResponse = NextResponse.next({ request });
-          cookiesToSet.forEach(({ name, value, options }) => {
-            const opts = !value
-              ? options // borrado (logout): respetar
-              : {
-                  ...options,
-                  maxAge: persistent ? REMEMBER_MAX_AGE : undefined,
-                };
-            supabaseResponse.cookies.set(name, value, opts);
-          });
+          cookiesToSet.forEach(({ name, value, options }) =>
+            supabaseResponse.cookies.set(name, value, options),
+          );
         },
       },
     },

@@ -1,22 +1,13 @@
-import { createClient } from "@/lib/supabase/server";
-import { getSettings } from "@/lib/queries";
+import { getSettings, getPrizeInfo } from "@/lib/queries";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { formatCurrency } from "@/lib/utils";
-import { STAGE_LABELS } from "@/lib/constants";
-import type { EliminationRule } from "@/lib/types";
 
 export default async function RulesPage() {
   const settings = await getSettings();
-  const supabase = await createClient();
-  const { data } = await supabase
-    .from("elimination_rules")
-    .select("*")
-    .order("created_at", { ascending: true });
-  const rules = (data as EliminationRule[]) ?? [];
+  const prize = await getPrizeInfo();
 
-  const fee = Number(settings.entry_fee || 0);
-  const currency = settings.currency || "COP";
+  const fee = prize.entryFee;
+  const currency = prize.currency;
   const pts = settings.points_per_correct || "1";
 
   return (
@@ -47,8 +38,60 @@ export default async function RulesPage() {
           <p>• Puedes editar tu predicción hasta el cierre.</p>
           <p>• Solo una predicción por partido.</p>
           <p>
-            • Las fases de eliminación se habilitan cuando se definen los equipos
-            clasificados.
+            • <span className="font-semibold text-foreground">Todos juegan
+            todos los partidos</span> hasta la final: nadie queda eliminado.
+          </p>
+        </CardContent>
+      </Card>
+
+      <Card className="border-primary/30">
+        <CardHeader>
+          <CardTitle>Premios 🏆</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3 text-sm text-muted-foreground">
+          <p>
+            El premio acumulado se reparte entre los 3 primeros de la tabla al
+            final del torneo:
+          </p>
+          <div className="space-y-1">
+            <div className="flex items-center justify-between rounded-md border border-border px-3 py-2">
+              <span className="font-medium text-amber-400">🥇 1° lugar</span>
+              <span>
+                {prize.pct[0]}% ·{" "}
+                <span className="font-semibold text-emerald-400">
+                  {formatCurrency(prize.prizes[0], currency)}
+                </span>
+              </span>
+            </div>
+            <div className="flex items-center justify-between rounded-md border border-border px-3 py-2">
+              <span className="font-medium text-zinc-300">🥈 2° lugar</span>
+              <span>
+                {prize.pct[1]}% ·{" "}
+                <span className="font-semibold text-emerald-400">
+                  {formatCurrency(prize.prizes[1], currency)}
+                </span>
+              </span>
+            </div>
+            <div className="flex items-center justify-between rounded-md border border-border px-3 py-2">
+              <span className="font-medium text-amber-700">🥉 3° lugar</span>
+              <span>
+                {prize.pct[2]}% ·{" "}
+                <span className="font-semibold text-emerald-400">
+                  {formatCurrency(prize.prizes[2], currency)}
+                </span>
+              </span>
+            </div>
+          </div>
+          <p>
+            Premio total en juego:{" "}
+            <span className="font-semibold text-foreground">
+              {formatCurrency(prize.pool, currency)}
+            </span>{" "}
+            ({prize.participants}{" "}
+            {prize.participants === 1 ? "participante" : "participantes"}). Cada
+            cupo aporta {formatCurrency(prize.perPerson, currency)} al premio
+            (la diferencia cubre el costo de la página). Los montos cambian
+            dinámicamente con cada inscripción.
           </p>
         </CardContent>
       </Card>
@@ -71,36 +114,6 @@ export default async function RulesPage() {
           </CardContent>
         </Card>
       )}
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Eliminación por fases</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-2 text-sm text-muted-foreground">
-          <p>
-            Al terminar cada fase, quienes no alcancen el puntaje mínimo quedan
-            eliminados (conservan sus puntos e historial).
-          </p>
-          <div className="space-y-1">
-            {rules.map((r) => (
-              <div
-                key={r.id}
-                className="flex items-center justify-between rounded-md border border-border px-3 py-2"
-              >
-                <span className="text-foreground">{STAGE_LABELS[r.stage]}</span>
-                <span className="flex items-center gap-2">
-                  <span>mínimo {r.minimum_points} pts</span>
-                  {r.active ? (
-                    <Badge variant="success">Activa</Badge>
-                  ) : (
-                    <Badge variant="muted">Inactiva</Badge>
-                  )}
-                </span>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
     </div>
   );
 }

@@ -3,7 +3,7 @@ import {
   Trophy,
   Target,
   Clock,
-  Users,
+  Coins,
   ShieldCheck,
   BarChart3,
   ArrowRight,
@@ -11,19 +11,20 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { createClient } from "@/lib/supabase/server";
-import { getSettings } from "@/lib/queries";
+import { getSettings, getPrizeInfo } from "@/lib/queries";
 import { formatCurrency } from "@/lib/utils";
 import type { PublicLeaderboardRow } from "@/lib/types";
 
 export default async function LandingPage() {
   const settings = await getSettings();
+  const prize = await getPrizeInfo();
   const supabase = await createClient();
   const { data: lb } = await supabase.rpc("pm_public_leaderboard");
   const leaderboard = ((lb as PublicLeaderboardRow[]) ?? []).slice(0, 5);
 
   const name = settings.tournament_name || "Polla Mundialista FIFA 2026";
   const fee = Number(settings.entry_fee || 0);
-  const currency = settings.currency || "COP";
+  const currency = prize.currency;
   const publicLb = settings.public_leaderboard === "true";
 
   const features = [
@@ -43,9 +44,9 @@ export default async function LandingPage() {
       desc: "El ranking se actualiza al cargar cada resultado.",
     },
     {
-      icon: Users,
-      title: "Eliminación por fases",
-      desc: "Si no alcanzas el puntaje mínimo, quedas fuera.",
+      icon: Coins,
+      title: "Premios al top 3",
+      desc: `Se reparte ${prize.pct[0]}%, ${prize.pct[1]}% y ${prize.pct[2]}% del premio entre los 3 primeros.`,
     },
   ];
 
@@ -95,6 +96,20 @@ export default async function LandingPage() {
                 </Button>
               </Link>
             </div>
+            <div className="rounded-xl border border-primary/30 bg-primary/10 p-4">
+              <p className="flex items-center gap-2 text-xs font-medium uppercase tracking-wide text-primary">
+                <Coins className="h-4 w-4" /> Premio en juego
+              </p>
+              <p className="mt-1 text-3xl font-extrabold text-foreground">
+                {formatCurrency(prize.pool, currency)}
+              </p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                {prize.participants}{" "}
+                {prize.participants === 1 ? "participante" : "participantes"} ·{" "}
+                {formatCurrency(prize.perPerson, currency)} de cada cupo van al
+                premio. ¡Crece con cada inscripción!
+              </p>
+            </div>
             {fee > 0 && (
               <p className="text-sm text-muted-foreground">
                 Costo del cupo:{" "}
@@ -119,22 +134,37 @@ export default async function LandingPage() {
                   </p>
                 ) : (
                   <ol className="space-y-2">
-                    {leaderboard.map((row, i) => (
-                      <li
-                        key={i}
-                        className="flex items-center justify-between rounded-lg bg-secondary/40 px-3 py-2 text-sm"
-                      >
-                        <span className="flex items-center gap-3">
-                          <span className="font-bold text-primary">
-                            {row.position}
+                    {leaderboard.map((row, i) => {
+                      const reward =
+                        row.position >= 1 &&
+                        row.position <= 3 &&
+                        prize.pool > 0
+                          ? prize.prizes[row.position - 1]
+                          : null;
+                      return (
+                        <li
+                          key={i}
+                          className="flex items-center justify-between rounded-lg bg-secondary/40 px-3 py-2 text-sm"
+                        >
+                          <span className="flex items-center gap-3">
+                            <span className="font-bold text-primary">
+                              {row.position}
+                            </span>
+                            {row.full_name ?? "Participante"}
                           </span>
-                          {row.full_name ?? "Participante"}
-                        </span>
-                        <span className="font-semibold">
-                          {row.total_points} pts
-                        </span>
-                      </li>
-                    ))}
+                          <span className="flex items-center gap-2">
+                            {reward != null && (
+                              <span className="font-semibold text-emerald-400">
+                                {formatCurrency(reward, currency)}
+                              </span>
+                            )}
+                            <span className="text-muted-foreground">
+                              {row.total_points} pts
+                            </span>
+                          </span>
+                        </li>
+                      );
+                    })}
                   </ol>
                 )}
               </CardContent>
@@ -171,7 +201,11 @@ export default async function LandingPage() {
               <li>• Las apuestas cierran 1 hora antes de cada partido.</li>
               <li>• Solo participan los cupos aprobados por el organizador.</li>
               <li>• Puedes editar tu predicción hasta el cierre.</li>
-              <li>• Se elimina a quien no alcance el puntaje mínimo por fase.</li>
+              <li>• Todos juegan todos los partidos hasta la final. ¡Nadie queda eliminado!</li>
+              <li>
+                • El premio se reparte entre los 3 primeros:{" "}
+                {prize.pct[0]}% / {prize.pct[1]}% / {prize.pct[2]}%.
+              </li>
             </ul>
             <Link href="/register">
               <Button className="gap-2">

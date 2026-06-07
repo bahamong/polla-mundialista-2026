@@ -1,5 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
-import { getCurrentProfile } from "@/lib/queries";
+import { getCurrentProfile, getPrizeInfo } from "@/lib/queries";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   Table,
@@ -11,12 +11,13 @@ import {
 } from "@/components/ui/table";
 import { UserStatusBadge } from "@/components/status-badges";
 import { RealtimeRefresher } from "@/components/realtime-refresher";
-import { cn } from "@/lib/utils";
-import { Trophy } from "lucide-react";
+import { cn, formatCurrency } from "@/lib/utils";
+import { Trophy, Coins } from "lucide-react";
 import type { LeaderboardRow } from "@/lib/types";
 
 export default async function LeaderboardPage() {
   const profile = (await getCurrentProfile())!;
+  const prize = await getPrizeInfo();
   const supabase = await createClient();
 
   const { data } = await supabase
@@ -25,6 +26,12 @@ export default async function LeaderboardPage() {
     .order("position", { ascending: true });
   const rows = (data as LeaderboardRow[]) ?? [];
 
+  const podium = [
+    { label: "1° lugar", color: "text-amber-400", amount: prize.prizes[0], pct: prize.pct[0] },
+    { label: "2° lugar", color: "text-zinc-300", amount: prize.prizes[1], pct: prize.pct[1] },
+    { label: "3° lugar", color: "text-amber-700", amount: prize.prizes[2], pct: prize.pct[2] },
+  ];
+
   return (
     <div className="space-y-6">
       <RealtimeRefresher tables={["profiles"]} />
@@ -32,6 +39,42 @@ export default async function LeaderboardPage() {
         <Trophy className="h-6 w-6 text-primary" />
         <h1 className="text-2xl font-bold">Tabla de clasificación</h1>
       </div>
+
+      {/* Premio en juego */}
+      <Card className="border-primary/30">
+        <CardContent className="space-y-4 p-5">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <span className="flex items-center gap-2 text-sm font-medium uppercase tracking-wide text-primary">
+              <Coins className="h-4 w-4" /> Premio en juego
+            </span>
+            <span className="text-2xl font-extrabold">
+              {formatCurrency(prize.pool, prize.currency)}
+            </span>
+          </div>
+          <div className="grid grid-cols-3 gap-3">
+            {podium.map((p) => (
+              <div
+                key={p.label}
+                className="rounded-lg bg-secondary/40 p-3 text-center"
+              >
+                <p className={cn("text-xs font-semibold", p.color)}>
+                  {p.label} · {p.pct}%
+                </p>
+                <p className="mt-1 text-sm font-bold text-emerald-400">
+                  {formatCurrency(p.amount, prize.currency)}
+                </p>
+              </div>
+            ))}
+          </div>
+          <p className="text-xs text-muted-foreground">
+            {prize.participants}{" "}
+            {prize.participants === 1 ? "participante" : "participantes"} ·{" "}
+            {formatCurrency(prize.perPerson, prize.currency)} de cada cupo van al
+            premio. Los montos se actualizan con cada inscripción y según la
+            posición actual.
+          </p>
+        </CardContent>
+      </Card>
 
       <Card>
         <CardContent className="p-0">
@@ -47,7 +90,7 @@ export default async function LeaderboardPage() {
                 <TableHead className="hidden text-center sm:table-cell">
                   Aciertos
                 </TableHead>
-                <TableHead className="text-center">Estado</TableHead>
+                <TableHead className="text-right">Premio</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -63,6 +106,10 @@ export default async function LeaderboardPage() {
               ) : (
                 rows.map((row) => {
                   const isMe = row.user_id === profile.user_id;
+                  const reward =
+                    row.position >= 1 && row.position <= 3 && prize.pool > 0
+                      ? prize.prizes[row.position - 1]
+                      : null;
                   return (
                     <TableRow
                       key={row.user_id}
@@ -88,6 +135,9 @@ export default async function LeaderboardPage() {
                         {isMe && (
                           <span className="ml-2 text-xs text-primary">(tú)</span>
                         )}
+                        <div className="sm:hidden">
+                          <UserStatusBadge status={row.status} />
+                        </div>
                       </TableCell>
                       <TableCell className="text-center font-bold">
                         {row.total_points}
@@ -98,8 +148,14 @@ export default async function LeaderboardPage() {
                       <TableCell className="hidden text-center sm:table-cell">
                         {row.hits}
                       </TableCell>
-                      <TableCell className="text-center">
-                        <UserStatusBadge status={row.status} />
+                      <TableCell className="text-right">
+                        {reward != null ? (
+                          <span className="font-semibold text-emerald-400">
+                            {formatCurrency(reward, prize.currency)}
+                          </span>
+                        ) : (
+                          <span className="text-muted-foreground">—</span>
+                        )}
                       </TableCell>
                     </TableRow>
                   );
