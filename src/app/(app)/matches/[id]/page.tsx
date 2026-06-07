@@ -1,7 +1,5 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { format } from "date-fns";
-import { es } from "date-fns/locale";
 import { ArrowLeft, MapPin, CalendarDays } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentProfile } from "@/lib/queries";
@@ -12,6 +10,7 @@ import { TeamFlag } from "@/components/team-flag";
 import { Countdown } from "@/components/countdown";
 import { PredictionForm } from "@/components/prediction-form";
 import { STAGE_LABELS } from "@/lib/constants";
+import { formatMatchDateTimeLong } from "@/lib/utils";
 import type { MatchWithTeams, Prediction } from "@/lib/types";
 
 export default async function MatchDetailPage({
@@ -109,11 +108,7 @@ export default async function MatchDetailPage({
           <div className="flex flex-wrap items-center justify-center gap-4 text-sm text-muted-foreground">
             <span className="inline-flex items-center gap-1">
               <CalendarDays className="h-4 w-4" />
-              {format(
-                new Date(match.match_datetime),
-                "EEEE d 'de' MMMM, HH:mm",
-                { locale: es },
-              )}
+              {formatMatchDateTimeLong(match.match_datetime)}
             </span>
             {match.stadium && match.stadium !== "Por definir" && (
               <span className="inline-flex items-center gap-1">

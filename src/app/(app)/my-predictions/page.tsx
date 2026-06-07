@@ -1,6 +1,4 @@
 import Link from "next/link";
-import { format } from "date-fns";
-import { es } from "date-fns/locale";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentProfile } from "@/lib/queries";
 import {
@@ -12,6 +10,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { TeamFlag } from "@/components/team-flag";
 import { PREDICTION_LABELS, STAGE_LABELS } from "@/lib/constants";
+import { formatMatchDateTime } from "@/lib/utils";
 import type { MatchWithTeams, Prediction } from "@/lib/types";
 
 type PredWithMatch = Prediction & { match: MatchWithTeams };
@@ -60,9 +59,7 @@ export default async function MyPredictionsPage() {
                     {m.group_letter ? ` · Grupo ${m.group_letter}` : ""}
                   </CardTitle>
                   <span className="text-xs text-muted-foreground">
-                    {format(new Date(m.match_datetime), "d MMM HH:mm", {
-                      locale: es,
-                    })}
+                    {formatMatchDateTime(m.match_datetime)}
                   </span>
                 </CardHeader>
                 <CardContent className="space-y-3">

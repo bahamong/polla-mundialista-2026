@@ -1,5 +1,3 @@
-import { format } from "date-fns";
-import { es } from "date-fns/locale";
 import { MapPin, CalendarDays } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -8,6 +6,7 @@ import { TeamFlag } from "@/components/team-flag";
 import { Countdown } from "@/components/countdown";
 import { PredictionForm } from "@/components/prediction-form";
 import { STAGE_LABELS } from "@/lib/constants";
+import { formatMatchDateTime } from "@/lib/utils";
 import type { MatchWithTeams, Prediction } from "@/lib/types";
 
 export function MatchCard({
@@ -82,9 +81,7 @@ export function MatchCard({
         <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground">
           <span className="inline-flex items-center gap-1">
             <CalendarDays className="h-3 w-3" />
-            {format(new Date(match.match_datetime), "EEE d MMM, HH:mm", {
-              locale: es,
-            })}
+            {formatMatchDateTime(match.match_datetime)}
           </span>
           {match.city && match.city !== "Por definir" && (
             <span className="inline-flex items-center gap-1">

@@ -234,8 +234,8 @@ begin
   select * into m from public.matches where id = p_match_id;
   if not found then return; end if;
   if m.stage = 'groups' or m.fifa_match_number is null then return; end if;
-  v_tag_w := 'Ganador P'  || m.fifa_match_number;
-  v_tag_l := 'Perdedor P' || m.fifa_match_number;
+  v_tag_w := 'Ganador Partido '  || m.fifa_match_number;
+  v_tag_l := 'Perdedor Partido ' || m.fifa_match_number;
 
   if m.status = 'finished' and m.winner_team_id is not null then
     v_winner := m.winner_team_id;
