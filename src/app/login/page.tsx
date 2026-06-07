@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { PasswordInput } from "@/components/ui/password-input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { REMEMBER_MAX_AGE } from "@/lib/auth-cookies";
 
 function LoginForm() {
   const router = useRouter();
@@ -18,6 +19,7 @@ function LoginForm() {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [remember, setRemember] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -25,6 +27,12 @@ function LoginForm() {
     e.preventDefault();
     setLoading(true);
     setError(null);
+
+    // Fija la preferencia ANTES de crear el cliente (define la vida de las cookies)
+    document.cookie = remember
+      ? `pm-remember=1; path=/; max-age=${REMEMBER_MAX_AGE}; samesite=lax`
+      : `pm-remember=0; path=/; samesite=lax`;
+
     const supabase = createClient();
     const { error } = await supabase.auth.signInWithPassword({
       email,
@@ -70,6 +78,15 @@ function LoginForm() {
               placeholder="••••••••"
             />
           </div>
+          <label className="flex cursor-pointer items-center gap-2 text-sm text-muted-foreground">
+            <input
+              type="checkbox"
+              checked={remember}
+              onChange={(e) => setRemember(e.target.checked)}
+              className="h-4 w-4 accent-primary"
+            />
+            Mantener sesión iniciada
+          </label>
           {error && <p className="text-sm text-destructive">{error}</p>}
           <Button type="submit" className="w-full" disabled={loading}>
             {loading && <Loader2 className="h-4 w-4 animate-spin" />}
