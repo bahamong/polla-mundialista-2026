@@ -1,10 +1,16 @@
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { cookies } from "next/headers";
+import {
+  REMEMBER_COOKIE,
+  REMEMBER_MAX_AGE,
+  wantsPersistent,
+} from "@/lib/auth-cookies";
 
 type CookieToSet = { name: string; value: string; options?: CookieOptions };
 
 export async function createClient() {
   const cookieStore = await cookies();
+  const persistent = wantsPersistent(cookieStore.get(REMEMBER_COOKIE)?.value);
 
   return createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -16,9 +22,17 @@ export async function createClient() {
         },
         setAll(cookiesToSet: CookieToSet[]) {
           try {
-            cookiesToSet.forEach(({ name, value, options }) =>
-              cookieStore.set(name, value, options),
-            );
+            cookiesToSet.forEach(({ name, value, options }) => {
+              const isDelete = !value || options?.maxAge === 0;
+              const opts = isDelete
+                ? options
+                : {
+                    ...options,
+                    maxAge: persistent ? REMEMBER_MAX_AGE : undefined,
+                    expires: undefined,
+                  };
+              cookieStore.set(name, value, opts);
+            });
           } catch {
             // Llamado desde un Server Component; el middleware refresca la sesión.
           }
