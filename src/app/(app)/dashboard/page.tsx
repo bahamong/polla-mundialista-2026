@@ -7,9 +7,10 @@ import {
   AlertTriangle,
   ArrowRight,
   Wallet,
+  Coins,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
-import { getCurrentProfile, getSettings } from "@/lib/queries";
+import { getCurrentProfile, getSettings, getPrizeInfo } from "@/lib/queries";
 import { formatCurrency } from "@/lib/utils";
 import {
   Card,
@@ -33,10 +34,11 @@ import type {
 export default async function DashboardPage() {
   const profile = (await getCurrentProfile())!;
   const settings = await getSettings();
+  const prize = await getPrizeInfo();
   const supabase = await createClient();
 
   const fee = Number(settings.entry_fee || 0);
-  const currency = settings.currency || "COP";
+  const currency = prize.currency;
 
   // posición en el ranking
   const { data: lbRow } = await supabase
@@ -101,6 +103,41 @@ export default async function DashboardPage() {
           </Button>
         </Link>
       </div>
+
+      {/* Premio en juego */}
+      <Card className="hover-lift border-primary/30">
+        <CardContent className="flex flex-wrap items-center justify-between gap-4 p-5">
+          <div>
+            <p className="flex items-center gap-2 text-xs font-medium uppercase tracking-wide text-primary">
+              <Coins className="h-4 w-4" /> Premio en juego
+            </p>
+            <p className="mt-1 text-3xl font-extrabold">
+              {formatCurrency(prize.pool, currency)}
+            </p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              {prize.participants}{" "}
+              {prize.participants === 1 ? "participante" : "participantes"} ·{" "}
+              {formatCurrency(prize.perPerson, currency)} de cada cupo
+            </p>
+          </div>
+          <div className="grid grid-cols-3 gap-2 text-center">
+            {[
+              { l: "1°", c: "text-amber-400", a: prize.prizes[0], p: prize.pct[0] },
+              { l: "2°", c: "text-zinc-300", a: prize.prizes[1], p: prize.pct[1] },
+              { l: "3°", c: "text-amber-700", a: prize.prizes[2], p: prize.pct[2] },
+            ].map((x) => (
+              <div key={x.l} className="rounded-lg bg-secondary/40 px-3 py-2">
+                <p className={`text-xs font-semibold ${x.c}`}>
+                  {x.l} · {x.p}%
+                </p>
+                <p className="mt-0.5 text-sm font-bold text-emerald-400">
+                  {formatCurrency(x.a, currency)}
+                </p>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Estado del cupo */}
       {profile.status === "pending_payment" && (
