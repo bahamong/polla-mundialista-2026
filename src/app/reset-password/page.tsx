@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { Trophy, Loader2, CheckCircle2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
@@ -93,9 +93,8 @@ export default function ResetPasswordPage() {
             <form onSubmit={onSubmit} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="password">Nueva contraseña</Label>
-                <Input
+                <PasswordInput
                   id="password"
-                  type="password"
                   required
                   minLength={6}
                   value={password}
@@ -105,9 +104,8 @@ export default function ResetPasswordPage() {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="confirm">Confirmar contraseña</Label>
-                <Input
+                <PasswordInput
                   id="confirm"
-                  type="password"
                   required
                   value={confirm}
                   onChange={(e) => setConfirm(e.target.value)}
