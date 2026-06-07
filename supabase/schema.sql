@@ -225,9 +225,44 @@ begin
   where p.user_id = s.user_id;
 end $$;
 
+-- Avance automático de llaves según placeholders 'Ganador P##' / 'Perdedor P##'
+create or replace function public.pm_propagate_bracket(p_match_id uuid)
+returns void language plpgsql security definer set search_path = public as $$
+declare
+  m public.matches%rowtype; v_winner uuid; v_loser uuid; v_tag_w text; v_tag_l text;
+begin
+  select * into m from public.matches where id = p_match_id;
+  if not found then return; end if;
+  if m.stage = 'groups' or m.fifa_match_number is null then return; end if;
+  v_tag_w := 'Ganador P'  || m.fifa_match_number;
+  v_tag_l := 'Perdedor P' || m.fifa_match_number;
+
+  if m.status = 'finished' and m.winner_team_id is not null then
+    v_winner := m.winner_team_id;
+    v_loser  := case when m.winner_team_id = m.home_team_id then m.away_team_id
+                     when m.winner_team_id = m.away_team_id then m.home_team_id
+                     else null end;
+    update public.matches set home_team_id = v_winner where home_placeholder = v_tag_w and home_team_id is distinct from v_winner;
+    update public.matches set away_team_id = v_winner where away_placeholder = v_tag_w and away_team_id is distinct from v_winner;
+    if v_loser is not null then
+      update public.matches set home_team_id = v_loser where home_placeholder = v_tag_l and home_team_id is distinct from v_loser;
+      update public.matches set away_team_id = v_loser where away_placeholder = v_tag_l and away_team_id is distinct from v_loser;
+    end if;
+  else
+    update public.matches set home_team_id = null where home_placeholder = v_tag_w and status = 'scheduled';
+    update public.matches set away_team_id = null where away_placeholder = v_tag_w and status = 'scheduled';
+    update public.matches set home_team_id = null where home_placeholder = v_tag_l and status = 'scheduled';
+    update public.matches set away_team_id = null where away_placeholder = v_tag_l and status = 'scheduled';
+  end if;
+end $$;
+
 create or replace function public.pm_after_match_change()
 returns trigger language plpgsql security definer set search_path = public as $$
-begin perform public.pm_recompute_match_predictions(new.id); return new; end $$;
+begin
+  perform public.pm_recompute_match_predictions(new.id);
+  perform public.pm_propagate_bracket(new.id);
+  return new;
+end $$;
 
 create or replace function public.pm_after_payment_change()
 returns trigger language plpgsql security definer set search_path = public as $$
@@ -272,9 +307,9 @@ end $$;
 create or replace function public.pm_public_leaderboard()
 returns table("position" bigint, full_name text, total_points int, matches_played int, hits int, status pm_user_status)
 language sql stable security definer set search_path = public as $$
-  select rank() over (order by total_points desc) as position,
+  select rank() over (order by total_points desc, hits desc) as position,
          full_name, total_points, matches_played, hits, status
-  from public.profiles where role = 'participant' order by total_points desc;
+  from public.profiles where role = 'participant' order by total_points desc, hits desc;
 $$;
 
 -- ---------- TRIGGERS ----------
@@ -383,7 +418,7 @@ create policy predictions_admin_all on public.predictions for all to authenticat
 drop view if exists public.leaderboard;
 create view public.leaderboard with (security_invoker = on) as
 select user_id, full_name, status, total_points, matches_played, hits, misses,
-       rank() over (order by total_points desc) as position
+       rank() over (order by total_points desc, hits desc) as position
 from public.profiles where role = 'participant';
 grant select on public.leaderboard to authenticated;
 
@@ -396,6 +431,7 @@ revoke execute on function public.pm_after_payment_change() from anon, authentic
 revoke execute on function public.pm_protect_profile_fields() from anon, authenticated;
 revoke execute on function public.pm_handle_new_user() from anon, authenticated;
 revoke execute on function public.pm_recompute_match_predictions(uuid) from anon, authenticated;
+revoke execute on function public.pm_propagate_bracket(uuid) from anon, authenticated;
 revoke execute on function public.pm_is_admin(uuid) from anon;
 revoke execute on function public.pm_is_active_participant(uuid) from anon;
 revoke execute on function public.pm_can_bet_on_match(uuid) from anon;

@@ -22,7 +22,9 @@ Construido con **Next.js (App Router) + TypeScript + Tailwind CSS** y
 - **Cierre automático de apuestas 1 hora antes** (validado en frontend, backend y RLS).
 - Carga de resultados reales y **cálculo automático de puntos** (1 punto por acierto, configurable).
 - **Recálculo** ante correcciones de resultados.
-- Tabla de clasificación en tiempo real (Supabase Realtime).
+- Tabla de clasificación en tiempo real (Supabase Realtime), con **desempate por aciertos**.
+- **Recuperación de contraseña** por correo (`/forgot-password` → `/reset-password`).
+- **Avance automático de eliminatorias**: al finalizar un cruce, el ganador (y el perdedor de semis para el 3er puesto) se propaga solo al siguiente partido.
 - **Eliminación por fases** según puntaje mínimo configurable.
 - Fases con **placeholders** (`1A vs 2B`, `Ganador P73 vs Ganador P74`) hasta definir los clasificados reales.
 - Panel de administración completo (usuarios, pagos, equipos, partidos, resultados, reglas, configuración).
