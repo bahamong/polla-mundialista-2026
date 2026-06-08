@@ -351,8 +351,10 @@ alter table public.elimination_rules enable row level security;
 alter table public.tournament_settings enable row level security;
 
 -- profiles
+-- Lectura de profiles: solo el propio perfil o admin (no expone email/teléfono).
 drop policy if exists profiles_select on public.profiles;
-create policy profiles_select on public.profiles for select to authenticated using (true);
+create policy profiles_select on public.profiles for select to authenticated
+  using (user_id = auth.uid() or public.pm_is_admin(auth.uid()));
 drop policy if exists profiles_insert_self on public.profiles;
 create policy profiles_insert_self on public.profiles for insert to authenticated with check (user_id = auth.uid());
 drop policy if exists profiles_update_self on public.profiles;
@@ -466,6 +468,18 @@ language sql stable security definer set search_path = public as $$
 $$;
 revoke execute on function public.pm_transparency() from public, anon;
 grant execute on function public.pm_transparency() to authenticated;
+
+-- Ranking para usuarios autenticados (no expone PII; reemplaza el acceso directo a profiles)
+create or replace function public.pm_leaderboard()
+returns table(user_id uuid, full_name text, status pm_user_status,
+  total_points int, matches_played int, hits int, misses int, "position" bigint)
+language sql stable security definer set search_path = public as $$
+  select user_id, full_name, status, total_points, matches_played, hits, misses,
+         rank() over (order by total_points desc, hits desc) as position
+  from public.profiles where role = 'participant' order by position;
+$$;
+revoke execute on function public.pm_leaderboard() from public, anon;
+grant execute on function public.pm_leaderboard() to authenticated;
 
 -- Realtime
 do $$
