@@ -58,6 +58,7 @@ export async function updateSession(request: NextRequest) {
     "/matches",
     "/my-predictions",
     "/leaderboard",
+    "/transparency",
     "/profile",
     "/admin",
   ];

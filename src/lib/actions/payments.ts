@@ -14,9 +14,14 @@ export async function submitPayment(formData: FormData): Promise<{
   } = await supabase.auth.getUser();
   if (!user) return { error: "No autenticado." };
 
-  const amount = Number(formData.get("amount") ?? 0);
-  const method = String(formData.get("payment_method") ?? "");
-  const reference = String(formData.get("reference") ?? "");
+  // Validación/saneamiento de entrada
+  const rawAmount = Number(formData.get("amount") ?? 0);
+  const amount =
+    Number.isFinite(rawAmount) && rawAmount >= 0
+      ? Math.min(Math.round(rawAmount), 100_000_000)
+      : 0;
+  const method = String(formData.get("payment_method") ?? "").slice(0, 50);
+  const reference = String(formData.get("reference") ?? "").slice(0, 200);
 
   const { error } = await supabase.from("payments").insert({
     user_id: user.id,

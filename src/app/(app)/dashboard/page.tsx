@@ -120,21 +120,23 @@ export default async function DashboardPage() {
               {formatCurrency(prize.perPerson, currency)} de cada cupo
             </p>
           </div>
-          <div className="grid grid-cols-3 gap-2 text-center">
+          <div className="flex flex-wrap gap-2 text-center">
             {[
               { l: "1°", c: "text-amber-400", a: prize.prizes[0], p: prize.pct[0] },
               { l: "2°", c: "text-zinc-300", a: prize.prizes[1], p: prize.pct[1] },
               { l: "3°", c: "text-amber-700", a: prize.prizes[2], p: prize.pct[2] },
-            ].map((x) => (
-              <div key={x.l} className="rounded-lg bg-secondary/40 px-3 py-2">
-                <p className={`text-xs font-semibold ${x.c}`}>
-                  {x.l} · {x.p}%
-                </p>
-                <p className="mt-0.5 text-sm font-bold text-emerald-400">
-                  {formatCurrency(x.a, currency)}
-                </p>
-              </div>
-            ))}
+            ]
+              .filter((x) => x.p > 0)
+              .map((x) => (
+                <div key={x.l} className="rounded-lg bg-secondary/40 px-3 py-2">
+                  <p className={`text-xs font-semibold ${x.c}`}>
+                    {x.l} · {x.p}%
+                  </p>
+                  <p className="mt-0.5 text-sm font-bold text-emerald-400">
+                    {formatCurrency(x.a, currency)}
+                  </p>
+                </div>
+              ))}
           </div>
         </CardContent>
       </Card>

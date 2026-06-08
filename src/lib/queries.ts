@@ -82,13 +82,10 @@ export async function getPrizeInfo(): Promise<PrizeInfo> {
   const p2 = Number(settings.prize_pct_2 || 30);
   const p3 = Number(settings.prize_pct_3 || 10);
 
-  const { count } = await supabase
-    .from("profiles")
-    .select("*", { count: "exact", head: true })
-    .eq("role", "participant")
-    .eq("status", "active");
-
-  const participants = count ?? 0;
+  // Conteo vía función SECURITY DEFINER (funciona para anónimos en la landing,
+  // donde RLS bloquearía un SELECT directo a profiles).
+  const { data: countData } = await supabase.rpc("pm_active_participant_count");
+  const participants = Number(countData ?? 0);
   const pool = perPerson * participants;
 
   return {

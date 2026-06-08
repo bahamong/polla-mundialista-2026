@@ -439,6 +439,34 @@ revoke execute on function public.pm_recalculate_all() from anon;
 revoke execute on function public.pm_apply_elimination(pm_match_stage) from anon;
 grant execute on function public.pm_public_leaderboard() to anon, authenticated;
 
+-- Conteo de participantes activos (para el premio en la landing anónima)
+create or replace function public.pm_active_participant_count()
+returns int language sql stable security definer set search_path = public as $$
+  select count(*)::int from public.profiles where role = 'participant' and status = 'active';
+$$;
+revoke execute on function public.pm_active_participant_count() from public;
+grant execute on function public.pm_active_participant_count() to anon, authenticated;
+
+-- Transparencia: predicciones de todos, SOLO de partidos ya cerrados
+create or replace function public.pm_transparency()
+returns table(full_name text, user_id uuid, fifa_match_number int, stage pm_match_stage,
+  group_letter text, home text, away text, match_datetime timestamptz, match_status pm_match_status,
+  home_score int, away_score int, predicted_result pm_prediction_result, points_awarded int)
+language sql stable security definer set search_path = public as $$
+  select u.full_name, pr.user_id, m.fifa_match_number, m.stage, m.group_letter,
+    coalesce(ht.name, m.home_placeholder), coalesce(at.name, m.away_placeholder),
+    m.match_datetime, m.status, m.home_score, m.away_score, pr.predicted_result, pr.points_awarded
+  from public.predictions pr
+  join public.matches m on m.id = pr.match_id
+  join public.profiles u on u.user_id = pr.user_id
+  left join public.teams ht on ht.id = m.home_team_id
+  left join public.teams at on at.id = m.away_team_id
+  where now() >= m.bet_closes_at and u.role = 'participant'
+  order by m.fifa_match_number, u.full_name;
+$$;
+revoke execute on function public.pm_transparency() from public, anon;
+grant execute on function public.pm_transparency() to authenticated;
+
 -- Realtime
 do $$
 begin

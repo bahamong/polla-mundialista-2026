@@ -14,6 +14,7 @@ const NAV = [
   { href: "/matches", label: "Partidos" },
   { href: "/my-predictions", label: "Mis Predicciones" },
   { href: "/leaderboard", label: "Clasificación" },
+  { href: "/transparency", label: "Transparencia" },
   { href: "/rules", label: "Reglas" },
   { href: "/profile", label: "Perfil" },
 ];

@@ -30,7 +30,7 @@ export default async function LeaderboardPage() {
     { label: "1° lugar", color: "text-amber-400", amount: prize.prizes[0], pct: prize.pct[0] },
     { label: "2° lugar", color: "text-zinc-300", amount: prize.prizes[1], pct: prize.pct[1] },
     { label: "3° lugar", color: "text-amber-700", amount: prize.prizes[2], pct: prize.pct[2] },
-  ];
+  ].filter((p) => p.pct > 0);
 
   return (
     <div className="space-y-6">
@@ -51,7 +51,16 @@ export default async function LeaderboardPage() {
               {formatCurrency(prize.pool, prize.currency)}
             </span>
           </div>
-          <div className="grid grid-cols-3 gap-3">
+          <div
+            className={cn(
+              "grid gap-3",
+              podium.length === 1
+                ? "grid-cols-1"
+                : podium.length === 2
+                  ? "grid-cols-2"
+                  : "grid-cols-3",
+            )}
+          >
             {podium.map((p) => (
               <div
                 key={p.label}
@@ -107,7 +116,10 @@ export default async function LeaderboardPage() {
                 rows.map((row) => {
                   const isMe = row.user_id === profile.user_id;
                   const reward =
-                    row.position >= 1 && row.position <= 3 && prize.pool > 0
+                    row.position >= 1 &&
+                    row.position <= 3 &&
+                    prize.pool > 0 &&
+                    prize.pct[row.position - 1] > 0
                       ? prize.prizes[row.position - 1]
                       : null;
                   return (

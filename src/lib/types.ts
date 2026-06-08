@@ -137,3 +137,19 @@ export interface PublicLeaderboardRow {
   hits: number;
   status: UserStatus;
 }
+
+export interface TransparencyRow {
+  full_name: string | null;
+  user_id: string;
+  fifa_match_number: number | null;
+  stage: MatchStage;
+  group_letter: string | null;
+  home: string | null;
+  away: string | null;
+  match_datetime: string;
+  match_status: MatchStatus;
+  home_score: number | null;
+  away_score: number | null;
+  predicted_result: PredictionResult;
+  points_awarded: number;
+}

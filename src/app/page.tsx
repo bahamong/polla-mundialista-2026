@@ -26,6 +26,7 @@ export default async function LandingPage() {
   const fee = Number(settings.entry_fee || 0);
   const currency = prize.currency;
   const publicLb = settings.public_leaderboard === "true";
+  const winnersCount = prize.pct.filter((p) => p > 0).length;
 
   const features = [
     {
@@ -45,8 +46,17 @@ export default async function LandingPage() {
     },
     {
       icon: Coins,
-      title: "Premios al top 3",
-      desc: `Se reparte ${prize.pct[0]}%, ${prize.pct[1]}% y ${prize.pct[2]}% del premio entre los 3 primeros.`,
+      title:
+        winnersCount <= 1
+          ? "El ganador se lleva todo"
+          : `Premios al top ${winnersCount}`,
+      desc:
+        winnersCount <= 1
+          ? "El primer lugar se lleva el 100% del premio acumulado."
+          : `Se reparte ${prize.pct
+              .filter((p) => p > 0)
+              .map((p) => `${p}%`)
+              .join(" / ")} del premio entre los primeros.`,
     },
   ];
 
@@ -138,7 +148,8 @@ export default async function LandingPage() {
                       const reward =
                         row.position >= 1 &&
                         row.position <= 3 &&
-                        prize.pool > 0
+                        prize.pool > 0 &&
+                        prize.pct[row.position - 1] > 0
                           ? prize.prizes[row.position - 1]
                           : null;
                       return (
@@ -203,8 +214,12 @@ export default async function LandingPage() {
               <li>• Puedes editar tu predicción hasta el cierre.</li>
               <li>• Todos juegan todos los partidos hasta la final. ¡Nadie queda eliminado!</li>
               <li>
-                • El premio se reparte entre los 3 primeros:{" "}
-                {prize.pct[0]}% / {prize.pct[1]}% / {prize.pct[2]}%.
+                {winnersCount <= 1
+                  ? "• El primer lugar de la tabla se lleva todo el premio."
+                  : `• El premio se reparte entre los primeros: ${prize.pct
+                      .filter((p) => p > 0)
+                      .map((p) => `${p}%`)
+                      .join(" / ")}.`}
               </li>
             </ul>
             <Link href="/register">
