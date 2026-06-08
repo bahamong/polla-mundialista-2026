@@ -26,7 +26,10 @@ function realResult(r: TransparencyRow): "home" | "draw" | "away" | null {
 }
 
 function csvEscape(v: string | number | null | undefined) {
-  const s = String(v ?? "");
+  let s = String(v ?? "");
+  // Evita inyección de fórmulas (CSV injection) en Excel/Sheets:
+  // celdas que empiezan con = + - @ tab o CR se neutralizan con comilla simple.
+  if (/^[=+\-@\t\r]/.test(s)) s = "'" + s;
   return /[",\n;]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
 }
 
