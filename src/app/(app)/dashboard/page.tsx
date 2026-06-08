@@ -40,13 +40,11 @@ export default async function DashboardPage() {
   const fee = Number(settings.entry_fee || 0);
   const currency = prize.currency;
 
-  // posición en el ranking
-  const { data: lbRow } = await supabase
-    .from("leaderboard")
-    .select("*")
-    .eq("user_id", profile.user_id)
-    .maybeSingle();
-  const rank = (lbRow as LeaderboardRow | null)?.position;
+  // posición en el ranking (vía función segura)
+  const { data: lbData } = await supabase.rpc("pm_leaderboard");
+  const rank = ((lbData as LeaderboardRow[]) ?? []).find(
+    (r) => r.user_id === profile.user_id,
+  )?.position;
 
   // pagos del usuario
   const { data: paymentsData } = await supabase

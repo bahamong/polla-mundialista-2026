@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { maybeNotifyPhaseComplete, sendPhaseReportEmails } from "@/lib/email";
 import type { MatchStage, MatchStatus, UserRole, UserStatus } from "@/lib/types";
 
 type Result = { success?: true; error?: string; info?: string };
@@ -23,7 +24,52 @@ export async function saveMatchResult(
   revalidatePath("/admin/results");
   revalidatePath("/matches");
   revalidatePath("/leaderboard");
+
+  // Si este resultado completó una fase, enviar el reporte por correo (una vez).
+  if (status === "finished") {
+    try {
+      const { data: m } = await supabase
+        .from("matches")
+        .select("stage")
+        .eq("id", matchId)
+        .maybeSingle();
+      const st = (m as { stage?: MatchStage } | null)?.stage;
+      if (st) await maybeNotifyPhaseComplete(supabase, st);
+    } catch {
+      // No bloquear el guardado del resultado si el correo falla.
+    }
+  }
   return { success: true };
+}
+
+// Envío manual del reporte de una fase (respaldo / reenvío). Solo admin.
+export async function sendPhaseReportManual(stage: MatchStage): Promise<Result> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: "No autenticado." };
+  const { data: prof } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("user_id", user.id)
+    .maybeSingle();
+  const role = (prof as { role?: string } | null)?.role;
+  if (role !== "admin" && role !== "superadmin")
+    return { error: "No autorizado." };
+
+  const res = await sendPhaseReportEmails(supabase, stage);
+  if (res.skipped)
+    return {
+      error:
+        "Falta configurar el correo (RESEND_API_KEY y REPORT_FROM_EMAIL).",
+    };
+  if (res.error && res.sent === 0)
+    return { error: `No se pudo enviar: ${res.error}` };
+  return {
+    success: true,
+    info: `Reporte de "${stage}" enviado a ${res.sent} participante(s).`,
+  };
 }
 
 export async function updateMatch(

@@ -20,10 +20,7 @@ export default async function LeaderboardPage() {
   const prize = await getPrizeInfo();
   const supabase = await createClient();
 
-  const { data } = await supabase
-    .from("leaderboard")
-    .select("*")
-    .order("position", { ascending: true });
+  const { data } = await supabase.rpc("pm_leaderboard");
   const rows = (data as LeaderboardRow[]) ?? [];
 
   const podium = [

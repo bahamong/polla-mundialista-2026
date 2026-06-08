@@ -25,14 +25,6 @@ function realResult(r: TransparencyRow): "home" | "draw" | "away" | null {
   return "draw";
 }
 
-function csvEscape(v: string | number | null | undefined) {
-  let s = String(v ?? "");
-  // Evita inyección de fórmulas (CSV injection) en Excel/Sheets:
-  // celdas que empiezan con = + - @ tab o CR se neutralizan con comilla simple.
-  if (/^[=+\-@\t\r]/.test(s)) s = "'" + s;
-  return /[",\n;]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
-}
-
 export function TransparencyTable({ rows }: { rows: TransparencyRow[] }) {
   const [stage, setStage] = useState<MatchStage | "all">("all");
 
@@ -64,48 +56,9 @@ export function TransparencyTable({ rows }: { rows: TransparencyRow[] }) {
     return [...map.values()].sort((a, b) => b.pts - a.pts);
   }, [filtered]);
 
-  function exportCsv() {
-    const header = [
-      "Participante",
-      "Fase",
-      "N Partido",
-      "Local",
-      "Visitante",
-      "Marcador",
-      "Prediccion",
-      "Acerto",
-      "Puntos",
-    ];
-    const lines = [header.join(",")];
-    for (const r of filtered) {
-      const score =
-        r.home_score != null && r.away_score != null
-          ? `${r.home_score}-${r.away_score}`
-          : "";
-      lines.push(
-        [
-          csvEscape(r.full_name),
-          csvEscape(STAGE_LABELS[r.stage]),
-          csvEscape(r.fifa_match_number),
-          csvEscape(r.home),
-          csvEscape(r.away),
-          csvEscape(score),
-          csvEscape(PREDICTION_LABELS[r.predicted_result]),
-          csvEscape(r.points_awarded > 0 ? "Si" : r.match_status === "finished" ? "No" : ""),
-          csvEscape(r.points_awarded),
-        ].join(","),
-      );
-    }
-    const blob = new Blob(["﻿" + lines.join("\n")], {
-      type: "text/csv;charset=utf-8;",
-    });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    const tag = stage === "all" ? "completo" : stage;
-    a.download = `polla2026-transparencia-${tag}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
+  function downloadExcel() {
+    // Genera el Excel en el servidor (estilizado) y lo descarga.
+    window.location.href = `/api/report?stage=${stage}`;
   }
 
   return (
@@ -149,9 +102,9 @@ export function TransparencyTable({ rows }: { rows: TransparencyRow[] }) {
             {STAGE_LABELS[s]}
           </button>
         ))}
-        <Button onClick={exportCsv} className="ml-auto gap-2" size="sm">
+        <Button onClick={downloadExcel} className="ml-auto gap-2" size="sm">
           <Download className="h-4 w-4" />
-          Exportar {stage === "all" ? "todo" : "fase"} (CSV)
+          Descargar Excel {stage === "all" ? "(todo)" : "(fase)"}
         </Button>
       </div>
 
