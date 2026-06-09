@@ -17,11 +17,15 @@ export async function savePrediction(
   // Validación de servidor: cargar el partido y verificar cierre + equipos.
   const { data: match } = await supabase
     .from("matches")
-    .select("id, bet_closes_at, status, home_team_id, away_team_id")
+    .select("id, stage, bet_closes_at, status, home_team_id, away_team_id")
     .eq("id", matchId)
     .single();
 
   if (!match) return { error: "Partido no encontrado." };
+  if (match.stage !== "groups" && result === "draw")
+    return {
+      error: "En eliminatorias no hay empate: elige un ganador.",
+    };
   if (!match.home_team_id || !match.away_team_id)
     return { error: "Los equipos de este partido aún no están definidos." };
   if (match.status !== "scheduled")

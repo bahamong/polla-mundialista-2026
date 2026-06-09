@@ -13,6 +13,7 @@ export function PredictionForm({
   current,
   canBet,
   reason,
+  allowDraw = true,
 }: {
   matchId: string;
   homeName: string;
@@ -20,17 +21,24 @@ export function PredictionForm({
   current: PredictionResult | null;
   canBet: boolean;
   reason?: string;
+  allowDraw?: boolean;
 }) {
   const [selected, setSelected] = useState<PredictionResult | null>(current);
   const [isPending, startTransition] = useTransition();
   const [message, setMessage] = useState<string | null>(null);
   const [ok, setOk] = useState(false);
 
-  const options: { value: PredictionResult; label: string }[] = [
-    { value: "home", label: homeName },
-    { value: "draw", label: "Empate" },
-    { value: "away", label: awayName },
-  ];
+  // En eliminatorias no hay empate: solo gana local o gana visitante.
+  const options: { value: PredictionResult; label: string }[] = allowDraw
+    ? [
+        { value: "home", label: homeName },
+        { value: "draw", label: "Empate" },
+        { value: "away", label: awayName },
+      ]
+    : [
+        { value: "home", label: homeName },
+        { value: "away", label: awayName },
+      ];
 
   function choose(value: PredictionResult) {
     if (!canBet || isPending) return;
@@ -71,7 +79,12 @@ export function PredictionForm({
 
   return (
     <div className="space-y-2">
-      <div className="grid grid-cols-3 gap-2">
+      <div
+        className={cn(
+          "grid gap-2",
+          options.length === 2 ? "grid-cols-2" : "grid-cols-3",
+        )}
+      >
         {options.map((opt) => (
           <button
             key={opt.value}

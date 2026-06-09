@@ -101,6 +101,7 @@ export function MatchCard({
           current={prediction?.predicted_result ?? null}
           canBet={canBet}
           reason={reason}
+          allowDraw={match.stage === "groups"}
         />
 
         {finished && prediction && (

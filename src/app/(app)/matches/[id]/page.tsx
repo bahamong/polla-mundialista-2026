@@ -134,6 +134,7 @@ export default async function MatchDetailPage({
               current={prediction?.predicted_result ?? null}
               canBet={canBet}
               reason={reason}
+              allowDraw={match.stage === "groups"}
             />
           </div>
 
