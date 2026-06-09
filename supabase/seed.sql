@@ -153,6 +153,10 @@ where not exists (select 1 from public.matches where stage <> 'groups');
 insert into public.tournament_settings(key, value) values
   ('tournament_name',   'Polla Mundialista FIFA 2026'),
   ('entry_fee',         '100000'),
+  ('platform_fee',      '10000'),
+  ('prize_pct_1',       '100'),
+  ('prize_pct_2',       '0'),
+  ('prize_pct_3',       '0'),
   ('currency',          'COP'),
   ('points_per_correct','1'),
   ('registration_open', 'true'),
