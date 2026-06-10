@@ -1,0 +1,38 @@
+name: Sincronizar marcadores en vivo
+
+# Llama al endpoint /api/sync-scores cada 5 minutos para traer los marcadores
+# de la fuente externa. Es gratis en repos públicos. El endpoint solo actualiza
+# marcador + estado 'live' (nunca finaliza partidos), así que es seguro.
+#
+# Requiere dos "Repository secrets" (Settings → Secrets and variables → Actions):
+#   SYNC_URL    = https://TU-DOMINIO/api/sync-scores
+#   SYNC_SECRET = el mismo valor que pusiste en Vercel (env SYNC_SECRET)
+
+on:
+  schedule:
+    - cron: "*/5 * * * *"
+  workflow_dispatch: {}
+
+concurrency:
+  group: sync-scores
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Llamar endpoint de sincronización
+        env:
+          SYNC_URL: ${{ secrets.SYNC_URL }}
+          SYNC_SECRET: ${{ secrets.SYNC_SECRET }}
+        run: |
+          if [ -z "$SYNC_URL" ] || [ -z "$SYNC_SECRET" ]; then
+            echo "Faltan los secrets SYNC_URL / SYNC_SECRET — nada que hacer."
+            exit 0
+          fi
+          code=$(curl -sS -o /tmp/out.json -w "%{http_code}" \
+            -H "x-sync-key: $SYNC_SECRET" "$SYNC_URL")
+          echo "HTTP $code"
+          cat /tmp/out.json || true
+          echo ""
+          [ "$code" = "200" ] || { echo "::warning::sync-scores devolvió $code"; exit 1; }

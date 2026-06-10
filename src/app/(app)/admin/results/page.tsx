@@ -39,6 +39,17 @@ export default async function AdminResultsPage({
         ranking se actualiza. Si corriges un marcador, los puntos se recalculan.
       </p>
 
+      <div className="rounded-lg border border-primary/30 bg-primary/10 p-3 text-sm">
+        <p className="font-medium text-primary">Marcadores automáticos activos</p>
+        <p className="mt-1 text-muted-foreground">
+          Durante los partidos, el marcador y el estado{" "}
+          <strong>En juego</strong> se actualizan solos desde la fuente externa.
+          Para repartir los puntos, revisa el resultado y márcalo como{" "}
+          <strong>Finalizado</strong> tú mismo: la finalización siempre la
+          confirmas a mano.
+        </p>
+      </div>
+
       <div className="flex flex-wrap gap-2">
         {STAGE_ORDER.map((s) => (
           <Link

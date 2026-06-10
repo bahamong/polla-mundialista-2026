@@ -483,6 +483,67 @@ $$;
 revoke execute on function public.pm_leaderboard() from public, anon;
 grant execute on function public.pm_leaderboard() to authenticated;
 
+-- ---------- SINCRONIZACIÓN AUTOMÁTICA DE MARCADORES ----------
+-- Tabla privada para secretos del backend (no accesible por anon/authenticated).
+create table if not exists public.app_secrets (
+  key text primary key,
+  value text not null,
+  updated_at timestamptz not null default now()
+);
+alter table public.app_secrets enable row level security;
+revoke all on public.app_secrets from anon, authenticated;
+-- Sin políticas RLS => solo funciones SECURITY DEFINER pueden leerla.
+-- IMPORTANTE: el secreto se inserta manualmente (NO se versiona):
+--   insert into public.app_secrets(key,value) values ('sync_secret','<valor>')
+--   on conflict (key) do update set value = excluded.value, updated_at = now();
+
+-- Aplica marcadores en vivo desde la fuente externa. SEGURIDAD: exige el
+-- secreto compartido, nunca marca 'finished' (eso lo confirma el admin) y
+-- nunca toca partidos ya finalizados. Mapea por country_code y orienta el
+-- marcador según cómo esté guardado el partido.
+create or replace function public.pm_apply_live_scores(p_secret text, p_games jsonb)
+returns jsonb language plpgsql security definer set search_path = public as $$
+declare
+  v_secret text; g jsonb; v_home uuid; v_away uuid;
+  v_match public.matches%rowtype; v_hs int; v_as int;
+  v_matched int := 0; v_updated int := 0;
+begin
+  select value into v_secret from public.app_secrets where key = 'sync_secret';
+  if v_secret is null or v_secret = '' or p_secret is distinct from v_secret then
+    raise exception 'unauthorized';
+  end if;
+
+  for g in select * from jsonb_array_elements(p_games)
+  loop
+    select id into v_home from public.teams where lower(country_code) = lower(g->>'home_code') limit 1;
+    select id into v_away from public.teams where lower(country_code) = lower(g->>'away_code') limit 1;
+    if v_home is null or v_away is null then continue; end if;
+    v_matched := v_matched + 1;
+
+    select * into v_match from public.matches
+      where status <> 'finished'
+        and ( (home_team_id = v_home and away_team_id = v_away)
+           or (home_team_id = v_away and away_team_id = v_home) )
+      order by match_datetime limit 1;
+    if not found then continue; end if;
+
+    v_hs := nullif(g->>'home_score','')::int;
+    v_as := nullif(g->>'away_score','')::int;
+    if v_hs is null or v_as is null then continue; end if;
+
+    if v_match.home_team_id = v_home then
+      update public.matches set home_score = v_hs, away_score = v_as, status = 'live' where id = v_match.id;
+    else
+      update public.matches set home_score = v_as, away_score = v_hs, status = 'live' where id = v_match.id;
+    end if;
+    v_updated := v_updated + 1;
+  end loop;
+
+  return jsonb_build_object('matched', v_matched, 'updated', v_updated);
+end $$;
+revoke execute on function public.pm_apply_live_scores(text, jsonb) from public;
+grant execute on function public.pm_apply_live_scores(text, jsonb) to anon, authenticated;
+
 -- Realtime
 do $$
 begin
