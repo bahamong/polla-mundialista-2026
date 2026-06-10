@@ -169,7 +169,7 @@ export default async function DashboardPage() {
               </div>
               <div className="mt-3 grid gap-4 sm:grid-cols-2">
                 <div>
-                  <p className="text-xs uppercase tracking-wide text-muted-foreground">
+                  <p className="text-sm font-bold uppercase tracking-wide text-foreground">
                     Número Nequi
                   </p>
                   <CopyField
@@ -179,7 +179,7 @@ export default async function DashboardPage() {
                   />
                 </div>
                 <div>
-                  <p className="text-xs uppercase tracking-wide text-muted-foreground">
+                  <p className="text-sm font-bold uppercase tracking-wide text-foreground">
                     Llave Bre-B
                   </p>
                   <CopyField value="@NEQUILUI01126" label="la llave Bre-B" />
@@ -195,7 +195,7 @@ export default async function DashboardPage() {
               <div className="mb-2 flex items-center gap-2 text-sm font-semibold">
                 <Wallet className="h-4 w-4 text-primary" /> Registrar mi pago
               </div>
-              <PaymentForm defaultAmount={fee} />
+              <PaymentForm defaultAmount={fee} currency={currency} />
             </div>
             {payments.length > 0 && (
               <div className="space-y-2">

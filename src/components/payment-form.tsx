@@ -5,11 +5,16 @@ import { useRouter } from "next/navigation";
 import { Loader2, Send } from "lucide-react";
 import { submitPayment } from "@/lib/actions/payments";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select } from "@/components/ui/select";
+import { formatCurrency } from "@/lib/utils";
 
-export function PaymentForm({ defaultAmount }: { defaultAmount: number }) {
+export function PaymentForm({
+  defaultAmount,
+  currency = "COP",
+}: {
+  defaultAmount: number;
+  currency?: string;
+}) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [message, setMessage] = useState<string | null>(null);
@@ -34,51 +39,30 @@ export function PaymentForm({ defaultAmount }: { defaultAmount: number }) {
 
   return (
     <form action={action} className="space-y-3">
-      <div className="grid gap-3 sm:grid-cols-2">
+      {/* Monto fijo: no editable por el participante */}
+      <input type="hidden" name="amount" value={defaultAmount} />
+      <input type="hidden" name="payment_method" value="Nequi / Bre-B" />
+      <div className="flex flex-wrap items-end justify-between gap-3">
         <div className="space-y-1.5">
-          <Label htmlFor="amount">Monto</Label>
-          <Input
-            id="amount"
-            name="amount"
-            type="number"
-            min={0}
-            step="any"
-            defaultValue={defaultAmount}
-            required
-          />
+          <Label>Monto</Label>
+          <p className="text-2xl font-extrabold">
+            {formatCurrency(defaultAmount, currency)}
+          </p>
         </div>
-        <div className="space-y-1.5">
-          <Label htmlFor="payment_method">Método de pago</Label>
-          <Select id="payment_method" name="payment_method" defaultValue="transferencia">
-            <option value="transferencia">Transferencia</option>
-            <option value="nequi">Nequi</option>
-            <option value="daviplata">Daviplata</option>
-            <option value="efectivo">Efectivo</option>
-            <option value="otro">Otro</option>
-          </Select>
-        </div>
-      </div>
-      <div className="space-y-1.5">
-        <Label htmlFor="reference">Referencia / comprobante</Label>
-        <Input
-          id="reference"
-          name="reference"
-          placeholder="Número de transacción o nota"
-        />
+        <Button type="submit" disabled={isPending} className="gap-2">
+          {isPending ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <Send className="h-4 w-4" />
+          )}
+          Registrar pago
+        </Button>
       </div>
       {message && (
         <p className={ok ? "text-sm text-primary" : "text-sm text-destructive"}>
           {message}
         </p>
       )}
-      <Button type="submit" disabled={isPending} className="gap-2">
-        {isPending ? (
-          <Loader2 className="h-4 w-4 animate-spin" />
-        ) : (
-          <Send className="h-4 w-4" />
-        )}
-        Registrar pago
-      </Button>
     </form>
   );
 }
