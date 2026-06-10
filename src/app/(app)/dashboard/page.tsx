@@ -82,6 +82,7 @@ export default async function DashboardPage() {
   );
 
   const isActive = profile.status === "active";
+  const hasPayment = payments.length > 0;
 
   return (
     <div className="space-y-6">
@@ -144,17 +145,38 @@ export default async function DashboardPage() {
         <Card className="border-amber-500/40">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-amber-400">
-              <AlertTriangle className="h-5 w-5" /> Tu cupo está pendiente de
-              aprobación
+              <AlertTriangle className="h-5 w-5" />
+              {hasPayment
+                ? "Tu pago está pendiente de aprobación"
+                : "Activa tu cupo realizando el pago"}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <p className="text-sm text-muted-foreground">
-              Cuando el administrador confirme tu pago podrás participar.
+              {hasPayment
+                ? "Ya registraste tu pago. Cuando el administrador lo confirme podrás participar."
+                : "Para participar, consigna el valor del cupo al número de abajo y luego registra tu pago."}
               {settings.payment_instructions
                 ? ` ${settings.payment_instructions}`
                 : ""}
             </p>
+            {/* Número para consignar — visible mientras el cupo no esté activo */}
+            <div className="rounded-lg border border-primary/40 bg-primary/10 p-4">
+              <div className="flex items-center gap-2 text-sm font-semibold text-primary">
+                <Wallet className="h-4 w-4" /> Consigna{" "}
+                {formatCurrency(fee, currency)} por Nequi
+              </div>
+              <p className="mt-2 text-xs uppercase tracking-wide text-muted-foreground">
+                Número Nequi
+              </p>
+              <p className="text-2xl font-extrabold tracking-wide">
+                322 253 4090
+              </p>
+              <p className="mt-2 text-xs text-muted-foreground">
+                Después de transferir, registra tu pago aquí abajo para que el
+                administrador lo confirme.
+              </p>
+            </div>
             <div className="rounded-lg border border-border bg-secondary/30 p-4">
               <div className="mb-2 flex items-center gap-2 text-sm font-semibold">
                 <Wallet className="h-4 w-4 text-primary" /> Registrar mi pago
