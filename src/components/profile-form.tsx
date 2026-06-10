@@ -12,7 +12,6 @@ import type { Profile } from "@/lib/types";
 export function ProfileForm({ profile }: { profile: Profile }) {
   const router = useRouter();
   const [fullName, setFullName] = useState(profile.full_name ?? "");
-  const [phone, setPhone] = useState(profile.phone ?? "");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [ok, setOk] = useState(false);
@@ -24,7 +23,7 @@ export function ProfileForm({ profile }: { profile: Profile }) {
     const supabase = createClient();
     const { error } = await supabase
       .from("profiles")
-      .update({ full_name: fullName, phone })
+      .update({ full_name: fullName })
       .eq("user_id", profile.user_id);
     setLoading(false);
     if (error) {
@@ -49,14 +48,6 @@ export function ProfileForm({ profile }: { profile: Profile }) {
           id="fullName"
           value={fullName}
           onChange={(e) => setFullName(e.target.value)}
-        />
-      </div>
-      <div className="space-y-2">
-        <Label htmlFor="phone">Teléfono</Label>
-        <Input
-          id="phone"
-          value={phone}
-          onChange={(e) => setPhone(e.target.value)}
         />
       </div>
       {message && (

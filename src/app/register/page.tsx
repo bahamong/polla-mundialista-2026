@@ -15,7 +15,6 @@ export default function RegisterPage() {
   const router = useRouter();
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
-  const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [accept, setAccept] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -36,7 +35,7 @@ export default function RegisterPage() {
       email,
       password,
       options: {
-        data: { full_name: fullName, phone },
+        data: { full_name: fullName },
         emailRedirectTo:
           (process.env.NEXT_PUBLIC_SITE_URL || window.location.origin) +
           "/auth/callback",
@@ -111,15 +110,6 @@ export default function RegisterPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="tucorreo@ejemplo.com"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="phone">Teléfono (opcional)</Label>
-              <Input
-                id="phone"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                placeholder="+57 300 000 0000"
               />
             </div>
             <div className="space-y-2">

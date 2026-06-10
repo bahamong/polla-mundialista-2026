@@ -27,7 +27,6 @@ export interface Profile {
   user_id: string;
   full_name: string | null;
   email: string | null;
-  phone: string | null;
   role: UserRole;
   status: UserStatus;
   total_points: number;

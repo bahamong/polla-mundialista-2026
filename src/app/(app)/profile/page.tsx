@@ -8,6 +8,7 @@ import {
 import { ProfileForm } from "@/components/profile-form";
 import { UserStatusBadge } from "@/components/status-badges";
 import { Badge } from "@/components/ui/badge";
+import { ROLE_LABELS } from "@/lib/constants";
 
 export default async function ProfilePage() {
   const profile = (await getCurrentProfile())!;
@@ -20,7 +21,7 @@ export default async function ProfilePage() {
         <CardHeader className="flex-row items-center justify-between space-y-0">
           <CardTitle>Datos personales</CardTitle>
           <div className="flex items-center gap-2">
-            <Badge variant="outline">{profile.role}</Badge>
+            <Badge variant="outline">{ROLE_LABELS[profile.role]}</Badge>
             <UserStatusBadge status={profile.status} />
           </div>
         </CardHeader>

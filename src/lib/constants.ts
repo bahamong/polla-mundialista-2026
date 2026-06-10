@@ -3,8 +3,15 @@ import type {
   MatchStatus,
   PredictionResult,
   UserStatus,
+  UserRole,
   PaymentStatus,
 } from "./types";
+
+export const ROLE_LABELS: Record<UserRole, string> = {
+  participant: "Participante",
+  admin: "Admin",
+  superadmin: "Admin",
+};
 
 export const STAGE_LABELS: Record<MatchStage, string> = {
   groups: "Fase de grupos",

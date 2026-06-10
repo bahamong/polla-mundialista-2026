@@ -17,7 +17,7 @@ do $$ begin create type pm_prediction_status as enum ('valid','locked','void'); 
 create table if not exists public.profiles (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null unique references auth.users(id) on delete cascade,
-  full_name text, email text, phone text,
+  full_name text, email text,
   role pm_user_role not null default 'participant',
   status pm_user_status not null default 'pending_payment',
   total_points int not null default 0,
@@ -152,12 +152,12 @@ declare
   v_status pm_user_status := 'pending_payment';
 begin
   select exists (select 1 from public.profiles where role in ('admin','superadmin')) into v_has_admin;
-  if not v_has_admin then v_role := 'superadmin'; v_status := 'active'; end if;
-  insert into public.profiles (user_id, full_name, email, phone, role, status)
+  if not v_has_admin then v_role := 'admin'; v_status := 'active'; end if;
+  insert into public.profiles (user_id, full_name, email, role, status)
   values (
     new.id,
     coalesce(new.raw_user_meta_data->>'full_name', new.raw_user_meta_data->>'name', split_part(new.email,'@',1)),
-    new.email, new.raw_user_meta_data->>'phone', v_role, v_status
+    new.email, v_role, v_status
   ) on conflict (user_id) do nothing;
   return new;
 end $$;

@@ -6,9 +6,10 @@ import { Loader2, Check } from "lucide-react";
 import { updateUser } from "@/lib/actions/admin";
 import { Select } from "@/components/ui/select";
 import { TableCell, TableRow } from "@/components/ui/table";
+import { ROLE_LABELS, USER_STATUS_LABELS } from "@/lib/constants";
 import type { Profile, UserRole, UserStatus } from "@/lib/types";
 
-const ROLES: UserRole[] = ["participant", "admin", "superadmin"];
+const ROLES: UserRole[] = ["participant", "admin"];
 const STATUSES: UserStatus[] = [
   "pending_payment",
   "active",
@@ -18,7 +19,9 @@ const STATUSES: UserStatus[] = [
 
 export function UserRow({ user }: { user: Profile }) {
   const router = useRouter();
-  const [role, setRole] = useState<UserRole>(user.role);
+  const [role, setRole] = useState<UserRole>(
+    user.role === "superadmin" ? "admin" : user.role,
+  );
   const [status, setStatus] = useState<UserStatus>(user.status);
   const [isPending, startTransition] = useTransition();
   const [saved, setSaved] = useState(false);
@@ -41,7 +44,7 @@ export function UserRow({ user }: { user: Profile }) {
       <TableCell>
         <Select
           value={role}
-          className="h-8 w-36"
+          className="w-40"
           onChange={(e) => {
             const v = e.target.value as UserRole;
             setRole(v);
@@ -50,7 +53,7 @@ export function UserRow({ user }: { user: Profile }) {
         >
           {ROLES.map((r) => (
             <option key={r} value={r}>
-              {r}
+              {ROLE_LABELS[r]}
             </option>
           ))}
         </Select>
@@ -58,7 +61,7 @@ export function UserRow({ user }: { user: Profile }) {
       <TableCell>
         <Select
           value={status}
-          className="h-8 w-40"
+          className="w-44"
           onChange={(e) => {
             const v = e.target.value as UserStatus;
             setStatus(v);
@@ -67,7 +70,7 @@ export function UserRow({ user }: { user: Profile }) {
         >
           {STATUSES.map((s) => (
             <option key={s} value={s}>
-              {s}
+              {USER_STATUS_LABELS[s]}
             </option>
           ))}
         </Select>
