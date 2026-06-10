@@ -22,6 +22,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { UserStatusBadge, PaymentStatusBadge } from "@/components/status-badges";
 import { PaymentForm } from "@/components/payment-form";
+import { CopyField } from "@/components/copy-field";
 import { MatchCard } from "@/components/match-card";
 import { RealtimeRefresher } from "@/components/realtime-refresher";
 import type {
@@ -160,21 +161,34 @@ export default async function DashboardPage() {
                 ? ` ${settings.payment_instructions}`
                 : ""}
             </p>
-            {/* Número para consignar — visible mientras el cupo no esté activo */}
+            {/* Datos para consignar — visibles mientras el cupo no esté activo */}
             <div className="rounded-lg border border-primary/40 bg-primary/10 p-4">
               <div className="flex items-center gap-2 text-sm font-semibold text-primary">
                 <Wallet className="h-4 w-4" /> Consigna{" "}
                 {formatCurrency(fee, currency)} por Nequi
               </div>
-              <p className="mt-2 text-xs uppercase tracking-wide text-muted-foreground">
-                Número Nequi
-              </p>
-              <p className="text-2xl font-extrabold tracking-wide">
-                322 253 4090
-              </p>
-              <p className="mt-2 text-xs text-muted-foreground">
-                Después de transferir, registra tu pago aquí abajo para que el
-                administrador lo confirme.
+              <div className="mt-3 grid gap-4 sm:grid-cols-2">
+                <div>
+                  <p className="text-xs uppercase tracking-wide text-muted-foreground">
+                    Número Nequi
+                  </p>
+                  <CopyField
+                    value="3222534090"
+                    display="322 253 4090"
+                    label="el número Nequi"
+                  />
+                </div>
+                <div>
+                  <p className="text-xs uppercase tracking-wide text-muted-foreground">
+                    Llave Bre-B
+                  </p>
+                  <CopyField value="@NEQUILUI01126" label="la llave Bre-B" />
+                </div>
+              </div>
+              <p className="mt-3 text-xs text-muted-foreground">
+                Toca el número o la llave para copiarlo. Después de transferir,
+                registra tu pago aquí abajo para que el administrador lo
+                confirme.
               </p>
             </div>
             <div className="rounded-lg border border-border bg-secondary/30 p-4">
