@@ -10,23 +10,71 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { createClient } from "@/lib/supabase/server";
-import { getSettings, getPrizeInfo } from "@/lib/queries";
+import { createPublicClient } from "@/lib/supabase/public";
 import { formatCurrency } from "@/lib/utils";
-import type { PublicLeaderboardRow } from "@/lib/types";
+import type { PublicLeaderboardRow, TournamentSetting } from "@/lib/types";
+
+// ISR: la landing se cachea y se regenera en segundo plano cada 2 min.
+// Así se sirve instantánea a todos los visitantes y Supabase solo se consulta
+// de vez en cuando (no en cada visita), evitando lentitud bajo mucho tráfico.
+export const revalidate = 120;
+
+async function getLandingData() {
+  try {
+    const supabase = createPublicClient();
+    const [settingsRes, lbRes, cntRes] = await Promise.all([
+      supabase.from("tournament_settings").select("key,value"),
+      supabase.rpc("pm_public_leaderboard"),
+      supabase.rpc("pm_active_participant_count"),
+    ]);
+    const settings: Record<string, string> = {};
+    (settingsRes.data as TournamentSetting[] | null)?.forEach((s) => {
+      if (s.key) settings[s.key] = s.value ?? "";
+    });
+    return {
+      settings,
+      leaderboard: (lbRes.data as PublicLeaderboardRow[]) ?? [],
+      participants: Number(cntRes.data ?? 0),
+    };
+  } catch {
+    // Si Supabase está temporalmente inalcanzable, la página igual carga.
+    return {
+      settings: {} as Record<string, string>,
+      leaderboard: [] as PublicLeaderboardRow[],
+      participants: 0,
+    };
+  }
+}
 
 export default async function LandingPage() {
-  const settings = await getSettings();
-  const prize = await getPrizeInfo();
-  const supabase = await createClient();
-  const { data: lb } = await supabase.rpc("pm_public_leaderboard");
-  const leaderboard = ((lb as PublicLeaderboardRow[]) ?? []).slice(0, 5);
+  const { settings, leaderboard: allLb, participants } = await getLandingData();
+  const leaderboard = allLb.slice(0, 5);
 
   const name = settings.tournament_name || "Polla Mundialista FIFA 2026";
   const fee = Number(settings.entry_fee || 0);
-  const currency = prize.currency;
+  const platformFee = Number(settings.platform_fee || 0);
+  const perPerson = Math.max(fee - platformFee, 0);
+  const currency = settings.currency || "COP";
   const publicLb = settings.public_leaderboard === "true";
-  const winnersCount = prize.pct.filter((p) => p > 0).length;
+  const pct: [number, number, number] = [
+    Number(settings.prize_pct_1 || 100),
+    Number(settings.prize_pct_2 || 0),
+    Number(settings.prize_pct_3 || 0),
+  ];
+  const pool = perPerson * participants;
+  const prize = {
+    participants,
+    perPerson,
+    pool,
+    currency,
+    pct,
+    prizes: [
+      (pool * pct[0]) / 100,
+      (pool * pct[1]) / 100,
+      (pool * pct[2]) / 100,
+    ] as [number, number, number],
+  };
+  const winnersCount = pct.filter((p) => p > 0).length;
 
   const features = [
     {
