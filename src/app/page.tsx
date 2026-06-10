@@ -11,7 +11,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { createPublicClient } from "@/lib/supabase/public";
-import { formatCurrency } from "@/lib/utils";
+import { formatCurrency, rankActive } from "@/lib/utils";
 import type { PublicLeaderboardRow, TournamentSetting } from "@/lib/types";
 
 // ISR: la landing se cachea y se regenera en segundo plano cada 2 min.
@@ -48,7 +48,7 @@ async function getLandingData() {
 
 export default async function LandingPage() {
   const { settings, leaderboard: allLb, participants } = await getLandingData();
-  const leaderboard = allLb.slice(0, 5);
+  const leaderboard = rankActive(allLb).slice(0, 5);
 
   const name = settings.tournament_name || "Polla Mundialista FIFA 2026";
   const fee = Number(settings.entry_fee || 0);

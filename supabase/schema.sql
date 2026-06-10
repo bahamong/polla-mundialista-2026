@@ -309,7 +309,8 @@ returns table("position" bigint, full_name text, total_points int, matches_playe
 language sql stable security definer set search_path = public as $$
   select rank() over (order by total_points desc, hits desc) as position,
          full_name, total_points, matches_played, hits, status
-  from public.profiles where role = 'participant' order by total_points desc, hits desc;
+  from public.profiles where role = 'participant' and status = 'active'
+  order by total_points desc, hits desc;
 $$;
 
 -- ---------- TRIGGERS ----------
@@ -476,7 +477,8 @@ returns table(user_id uuid, full_name text, status pm_user_status,
 language sql stable security definer set search_path = public as $$
   select user_id, full_name, status, total_points, matches_played, hits, misses,
          rank() over (order by total_points desc, hits desc) as position
-  from public.profiles where role = 'participant' order by position;
+  from public.profiles where role = 'participant' and status = 'active'
+  order by position;
 $$;
 revoke execute on function public.pm_leaderboard() from public, anon;
 grant execute on function public.pm_leaderboard() to authenticated;

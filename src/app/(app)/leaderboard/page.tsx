@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/table";
 import { UserStatusBadge } from "@/components/status-badges";
 import { RealtimeRefresher } from "@/components/realtime-refresher";
-import { cn, formatCurrency } from "@/lib/utils";
+import { cn, formatCurrency, rankActive } from "@/lib/utils";
 import { Trophy, Coins } from "lucide-react";
 import type { LeaderboardRow } from "@/lib/types";
 
@@ -21,7 +21,7 @@ export default async function LeaderboardPage() {
   const supabase = await createClient();
 
   const { data } = await supabase.rpc("pm_leaderboard");
-  const rows = (data as LeaderboardRow[]) ?? [];
+  const rows = rankActive((data as LeaderboardRow[]) ?? []);
 
   const podium = [
     { label: "1° lugar", color: "text-amber-400", amount: prize.prizes[0], pct: prize.pct[0] },

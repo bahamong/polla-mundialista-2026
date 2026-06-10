@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { LeaderboardRow, MatchStage, TransparencyRow } from "@/lib/types";
 import type { ReportStanding } from "@/lib/reports";
+import { rankActive } from "@/lib/utils";
 
 export interface ReportData {
   rows: TransparencyRow[];
@@ -23,7 +24,7 @@ export async function getReportData(
   if (stage && stage !== "all") rows = rows.filter((r) => r.stage === stage);
 
   const { data: lb } = await supabase.rpc("pm_leaderboard");
-  const standings: ReportStanding[] = ((lb as LeaderboardRow[]) ?? []).map(
+  const standings: ReportStanding[] = rankActive((lb as LeaderboardRow[]) ?? []).map(
     (r) => ({
       position: r.position,
       full_name: r.full_name,

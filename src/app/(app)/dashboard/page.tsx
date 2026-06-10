@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentProfile, getSettings, getPrizeInfo } from "@/lib/queries";
-import { formatCurrency } from "@/lib/utils";
+import { formatCurrency, rankActive } from "@/lib/utils";
 import {
   Card,
   CardContent,
@@ -43,7 +43,7 @@ export default async function DashboardPage() {
 
   // posición en el ranking (vía función segura)
   const { data: lbData } = await supabase.rpc("pm_leaderboard");
-  const rank = ((lbData as LeaderboardRow[]) ?? []).find(
+  const rank = rankActive((lbData as LeaderboardRow[]) ?? []).find(
     (r) => r.user_id === profile.user_id,
   )?.position;
 

@@ -5,6 +5,37 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
+/**
+ * Deja solo participantes activos y recalcula la posición entre ellos
+ * (ranking con empates: mismo total de puntos y aciertos comparten posición).
+ * Así las clasificaciones no muestran usuarios sin cupo activo ni dejan
+ * huecos en la numeración.
+ */
+export function rankActive<
+  T extends {
+    status: string;
+    total_points: number;
+    hits: number;
+    position: number;
+  },
+>(rows: T[]): T[] {
+  const active = rows
+    .filter((r) => r.status === "active")
+    .sort((a, b) => b.total_points - a.total_points || b.hits - a.hits);
+
+  let lastPoints: number | null = null;
+  let lastHits: number | null = null;
+  let lastRank = 0;
+  return active.map((r, i) => {
+    if (r.total_points !== lastPoints || r.hits !== lastHits) {
+      lastRank = i + 1;
+      lastPoints = r.total_points;
+      lastHits = r.hits;
+    }
+    return { ...r, position: lastRank };
+  });
+}
+
 export function formatCurrency(amount: number, currency = "COP") {
   try {
     return new Intl.NumberFormat("es-CO", {
