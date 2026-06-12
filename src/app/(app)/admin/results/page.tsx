@@ -40,13 +40,18 @@ export default async function AdminResultsPage({
       </p>
 
       <div className="rounded-lg border border-primary/30 bg-primary/10 p-3 text-sm">
-        <p className="font-medium text-primary">Marcadores automáticos activos</p>
+        <p className="font-medium text-primary">
+          Sincronización automática activa
+        </p>
         <p className="mt-1 text-muted-foreground">
-          Durante los partidos, el marcador y el estado{" "}
-          <strong>En juego</strong> se actualizan solos desde la fuente externa.
-          Para repartir los puntos, revisa el resultado y márcalo como{" "}
-          <strong>Finalizado</strong> tú mismo: la finalización siempre la
-          confirmas a mano.
+          El marcador, el estado (<strong>Programado</strong> →{" "}
+          <strong>En juego</strong> → <strong>Finalizado</strong>) y el reparto
+          de puntos se actualizan solos desde la fuente externa, sin que hagas
+          nada. Solo necesitas entrar aquí si quieres{" "}
+          <strong>corregir</strong> un marcador: al guardar la corrección, los
+          puntos de todos se recalculan al instante. (Las{" "}
+          <strong>eliminaciones</strong> por fase las sigues aplicando tú a
+          mano.)
         </p>
       </div>
 

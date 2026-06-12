@@ -60,6 +60,7 @@ export interface SyncResult {
   started: number; // partidos en juego/terminados según la fuente
   matched: number; // resueltos a un partido nuestro
   updated: number; // efectivamente actualizados
+  finalized: number; // marcados como 'finished' en esta corrida
   error?: string;
 }
 
@@ -81,6 +82,7 @@ export async function syncLiveScores(secret: string): Promise<SyncResult> {
       away_code: string;
       home_score: string;
       away_score: string;
+      finished: boolean;
     }> = [];
 
     for (const g of gamesRes.games ?? []) {
@@ -93,11 +95,12 @@ export async function syncLiveScores(secret: string): Promise<SyncResult> {
         away_code: away,
         home_score: g.home_score ?? "0",
         away_score: g.away_score ?? "0",
+        finished: (g.finished || "").toUpperCase() === "TRUE",
       });
     }
 
     if (payload.length === 0) {
-      return { ok: true, started: 0, matched: 0, updated: 0 };
+      return { ok: true, started: 0, matched: 0, updated: 0, finalized: 0 };
     }
 
     const supabase = createPublicClient();
@@ -107,12 +110,17 @@ export async function syncLiveScores(secret: string): Promise<SyncResult> {
     });
     if (error) throw new Error(error.message);
 
-    const summary = (data ?? {}) as { matched?: number; updated?: number };
+    const summary = (data ?? {}) as {
+      matched?: number;
+      updated?: number;
+      finalized?: number;
+    };
     return {
       ok: true,
       started: payload.length,
       matched: summary.matched ?? 0,
       updated: summary.updated ?? 0,
+      finalized: summary.finalized ?? 0,
     };
   } catch (e) {
     return {
@@ -120,6 +128,7 @@ export async function syncLiveScores(secret: string): Promise<SyncResult> {
       started: 0,
       matched: 0,
       updated: 0,
+      finalized: 0,
       error: e instanceof Error ? e.message : String(e),
     };
   }

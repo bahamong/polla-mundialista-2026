@@ -8,6 +8,8 @@ name: Sincronizar marcadores en vivo
 #   SYNC_URL    = https://TU-DOMINIO/api/sync-scores
 #   SYNC_SECRET = el mismo valor que pusiste en Vercel (env SYNC_SECRET)
 
+# GitHub solo permite cron cada 5 min, así que cada corrida sondea varias
+# veces (cada ~55s) para acercarse a "tiempo real". Es gratis en repos públicos.
 on:
   schedule:
     - cron: "*/5 * * * *"
@@ -15,13 +17,14 @@ on:
 
 concurrency:
   group: sync-scores
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 jobs:
   sync:
     runs-on: ubuntu-latest
+    timeout-minutes: 6
     steps:
-      - name: Llamar endpoint de sincronización
+      - name: Sondear endpoint de sincronización (~cada 55s)
         env:
           SYNC_URL: ${{ secrets.SYNC_URL }}
           SYNC_SECRET: ${{ secrets.SYNC_SECRET }}
@@ -30,9 +33,9 @@ jobs:
             echo "Faltan los secrets SYNC_URL / SYNC_SECRET — nada que hacer."
             exit 0
           fi
-          code=$(curl -sS -o /tmp/out.json -w "%{http_code}" \
-            -H "x-sync-key: $SYNC_SECRET" "$SYNC_URL")
-          echo "HTTP $code"
-          cat /tmp/out.json || true
-          echo ""
-          [ "$code" = "200" ] || { echo "::warning::sync-scores devolvió $code"; exit 1; }
+          for i in $(seq 1 5); do
+            code=$(curl -sS -o /tmp/out.json -w "%{http_code}" \
+              -H "x-sync-key: $SYNC_SECRET" "$SYNC_URL" || echo "000")
+            echo "[$i] HTTP $code $(cat /tmp/out.json 2>/dev/null)"
+            [ "$i" -lt 5 ] && sleep 55 || true
+          done

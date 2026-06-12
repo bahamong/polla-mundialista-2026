@@ -497,16 +497,20 @@ revoke all on public.app_secrets from anon, authenticated;
 --   insert into public.app_secrets(key,value) values ('sync_secret','<valor>')
 --   on conflict (key) do update set value = excluded.value, updated_at = now();
 
--- Aplica marcadores en vivo desde la fuente externa. SEGURIDAD: exige el
--- secreto compartido, nunca marca 'finished' (eso lo confirma el admin) y
--- nunca toca partidos ya finalizados. Mapea por country_code y orienta el
--- marcador según cómo esté guardado el partido.
+-- Aplica marcadores en vivo desde la fuente externa y finaliza partidos
+-- automáticamente. SEGURIDAD/eficiencia: exige el secreto compartido; nunca
+-- toca partidos ya finalizados (protege correcciones del admin); solo escribe
+-- si el marcador/estado cambió; eliminatoria empatada con finished=TRUE
+-- (posibles penales) queda 'live' para que el admin defina al ganador.
+-- Mapea por country_code y orienta el marcador según el partido.
 create or replace function public.pm_apply_live_scores(p_secret text, p_games jsonb)
 returns jsonb language plpgsql security definer set search_path = public as $$
 declare
   v_secret text; g jsonb; v_home uuid; v_away uuid;
-  v_match public.matches%rowtype; v_hs int; v_as int;
-  v_matched int := 0; v_updated int := 0;
+  v_match public.matches%rowtype;
+  v_hs int; v_as int; d_home int; d_away int;
+  d_status pm_match_status; v_finished boolean;
+  v_matched int := 0; v_updated int := 0; v_finalized int := 0;
 begin
   select value into v_secret from public.app_secrets where key = 'sync_secret';
   if v_secret is null or v_secret = '' or p_secret is distinct from v_secret then
@@ -530,16 +534,36 @@ begin
     v_hs := nullif(g->>'home_score','')::int;
     v_as := nullif(g->>'away_score','')::int;
     if v_hs is null or v_as is null then continue; end if;
+    v_finished := coalesce((g->>'finished')::boolean, false);
 
     if v_match.home_team_id = v_home then
-      update public.matches set home_score = v_hs, away_score = v_as, status = 'live' where id = v_match.id;
+      d_home := v_hs; d_away := v_as;
     else
-      update public.matches set home_score = v_as, away_score = v_hs, status = 'live' where id = v_match.id;
+      d_home := v_as; d_away := v_hs;
     end if;
-    v_updated := v_updated + 1;
+
+    if v_finished then
+      if v_match.stage = 'groups' or d_home <> d_away then
+        d_status := 'finished';
+      else
+        d_status := 'live';   -- eliminatoria empatada: penales -> admin define
+      end if;
+    else
+      d_status := 'live';
+    end if;
+
+    if v_match.home_score is distinct from d_home
+       or v_match.away_score is distinct from d_away
+       or v_match.status  is distinct from d_status then
+      update public.matches
+        set home_score = d_home, away_score = d_away, status = d_status
+        where id = v_match.id;
+      v_updated := v_updated + 1;
+      if d_status = 'finished' then v_finalized := v_finalized + 1; end if;
+    end if;
   end loop;
 
-  return jsonb_build_object('matched', v_matched, 'updated', v_updated);
+  return jsonb_build_object('matched', v_matched, 'updated', v_updated, 'finalized', v_finalized);
 end $$;
 revoke execute on function public.pm_apply_live_scores(text, jsonb) from public;
 grant execute on function public.pm_apply_live_scores(text, jsonb) to anon, authenticated;
